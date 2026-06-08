@@ -1,0 +1,86 @@
+==================================================
+ CONECTANDO O POWER BI AO BANCO SQLITE (vendas.db)
+==================================================
+
+Este documento descreve, de forma simples, como conectar o
+Power BI Desktop ao banco SQLite gerado por este sistema
+e quais medidas DAX criar para análises.
+
+--------------------------------------------------
+ 1) PRÉ-REQUISITOS
+--------------------------------------------------
+
+- Ter o Power BI Desktop instalado (Windows).
+- Ter o driver ODBC do SQLite instalado.
+  Baixe em: http://www.ch-werner.de/sqliteodbc/
+  Instale a versão correspondente à arquitetura do seu Power BI
+  (geralmente 64 bits).
+
+--------------------------------------------------
+ 2) CRIANDO UM DSN ODBC (UMA ÚNICA VEZ)
+--------------------------------------------------
+
+a) Abra o menu Iniciar > "Fontes de Dados ODBC (64 bits)".
+b) Aba "DSN de Usuário" > Adicionar.
+c) Selecione "SQLite3 ODBC Driver" > Concluir.
+d) Em "Data Source Name", informe um nome, por exemplo: VendasSQLite
+e) Em "Database Name", clique em "Browse" e selecione o arquivo:
+       Projeto_Vendas/banco/vendas.db
+f) Clique em OK para salvar.
+
+--------------------------------------------------
+ 3) CONECTANDO O POWER BI
+--------------------------------------------------
+
+a) Abra o Power BI Desktop.
+b) "Obter Dados" > "ODBC" > selecione o DSN "VendasSQLite" > OK.
+c) Power BI mostrará as tabelas: produtos, vendas, itens_venda.
+d) Marque as três tabelas e clique em "Carregar".
+
+Dica: na guia "Modelo", garanta que existam os relacionamentos:
+    vendas.id        -> itens_venda.venda_id
+    produtos.id      -> itens_venda.produto_id
+
+--------------------------------------------------
+ 4) MEDIDAS DAX
+--------------------------------------------------
+
+Crie as três medidas abaixo no Power BI
+(painel "Modelo de Dados" > clique com o botão direito na tabela
+itens_venda > "Nova Medida"):
+
+-- Faturamento Total -----------------------------
+Faturamento Total = SUM(itens_venda[subtotal])
+
+-- Quantidade Vendida ----------------------------
+Quantidade Vendida = SUM(itens_venda[quantidade])
+
+-- Ticket Médio ----------------------------------
+Ticket Médio =
+DIVIDE(
+    [Faturamento Total],
+    DISTINCTCOUNT(itens_venda[venda_id])
+)
+
+--------------------------------------------------
+ 5) SUGESTÕES DE VISUAIS
+--------------------------------------------------
+
+- Cartão (Card)         -> Faturamento Total
+- Cartão (Card)         -> Quantidade Vendida
+- Cartão (Card)         -> Ticket Médio
+- Gráfico de barras     -> produtos[nome] x Quantidade Vendida
+- Gráfico de pizza      -> produtos[categoria] x Faturamento Total
+- Gráfico de linha      -> vendas[data_venda] x Faturamento Total
+
+--------------------------------------------------
+ 6) ATUALIZAÇÃO DOS DADOS
+--------------------------------------------------
+
+Sempre que houver novos lançamentos pelo sistema (vendas, produtos,
+estoque), basta abrir o Power BI e clicar em "Atualizar" para
+recarregar os dados do arquivo vendas.db.
+
+==================================================
+ FIM
+==================================================
