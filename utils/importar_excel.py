@@ -21,16 +21,25 @@ def _formatar_data(valor):
         return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
-def _buscar_ou_criar_produto(cursor, nome, categoria, marca, preco):
-   
+def _buscar_ou_criar_produto(cursor, nome, categoria, marca, preco, qtd):
     cursor.execute("SELECT id FROM produtos WHERE nome = ?", (nome,))
     linha = cursor.fetchone()
+
     if linha:
+        cursor.execute("""
+            UPDATE produtos
+            SET estoque = estoque + ?
+            WHERE id = ?
+        """, (qtd, linha["id"]))
+
         return linha["id"]
+
     cursor.execute("""
-        INSERT INTO produtos (nome, categoria, marca, preco, estoque)
-        VALUES (?, ?, ?, ?, 0)
-    """, (nome, categoria, marca, float(preco)))
+        INSERT INTO produtos
+        (nome, categoria, marca, preco, estoque)
+        VALUES (?, ?, ?, ?, ?)
+    """, (nome, categoria, marca, float(preco), qtd))
+
     return cursor.lastrowid
 
 
@@ -72,8 +81,8 @@ def importar_planilha_excel(caminho_arquivo):
 
             
             produto_id = _buscar_ou_criar_produto(
-                cursor, nome_prod, categoria, marca, preco
-            )
+                cursor, nome_prod, categoria, marca, preco, qtd
+)
 
             valor_total = qtd * preco
 
@@ -92,10 +101,10 @@ def importar_planilha_excel(caminho_arquivo):
             """, (venda_id, produto_id, qtd, preco, valor_total))
 
             
-            cursor.execute(
-                "UPDATE produtos SET estoque = estoque - ? WHERE id = ?",
-                (qtd, produto_id),
-            )
+            # cursor.execute(
+            #     "UPDATE produtos SET estoque = estoque - ? WHERE id = ?",
+            #     (qtd, produto_id),
+            # )
 
             importados += 1
         except Exception:

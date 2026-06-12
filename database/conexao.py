@@ -11,6 +11,8 @@ def conectar():
    
     if not os.path.exists(PASTA_BANCO):
         os.makedirs(PASTA_BANCO)
+        
+    print("Banco utilizado:", CAMINHO_BANCO)
 
     conexao = sqlite3.connect(CAMINHO_BANCO)
     
